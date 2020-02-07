@@ -1,21 +1,6 @@
 #include <Arduino.h>
 #include "RingBuffer.hpp"
-
-#define PIN_PEDAL A1
-#define PIN_TACHOMETER 2
-
-#define PIN_DRIVER_SPEED_CH1 5
-#define PIN_DRIVER_DIR_1 4
-#define PIN_DRIVER_SPEED_2 6
-#define PIN_DRIVER_DIR_2 7
-
-#define Min_RPM 700
-#define Max_RPM 1300
-
-#define Min_ValPedal 0
-#define Max_ValPedal 5
-
-#define monitor
+#include "config.h"
 
 RPMMetr *rpm;
 RingBuffer<float> *pedal;
@@ -32,13 +17,22 @@ void setup()
 
   attachInterrupt(digitalPinToInterrupt(PIN_TACHOMETER), tachometer_Interrupt, FALLING);
 
+  //select direction for the first channel
+  pinMode(PIN_DRIVER_DIR_CH1, OUTPUT); 
+  digitalWrite(PIN_DRIVER_DIR_CH1, LOW);
+  //and the seckond channel
+  pinMode(PIN_DRIVER_DIR_CH2, OUTPUT); 
+  digitalWrite(PIN_DRIVER_DIR_CH1, LOW);
+  
+  pinMode(PIN_DRIVER_SPEED_CH1, OUTPUT); 
+  pinMode(PIN_DRIVER_SPEED_CH2, OUTPUT); 
+
+
 #ifdef monitor
   Serial.begin(115200);
 #endif
 }
-volatile long time_front = 0;
-volatile long time_to_print = 0;
-volatile long time_to_update_A1 = 0;
+
 
 void loop()
 {
@@ -56,17 +50,23 @@ void loop()
   /*
     READY TO WRITE BUISNESS LOGIC
   */
-
-#ifdef monitor
-  if (time_to_print - millis() > 40)
+  if (millis() - time_to_update_A1 > 50)
   {
-    Serial.print("Value of RPM:");
-    Serial.print(rpm->getRPM(1));
-    Serial.print(rpm->getAverage());
-    Serial.print("\nValue of pedal(in %):");
-    Serial.print(pedal->getAverage() / 1023.f);
-    time_to_print = millis();
+    load_RPM = map(rpm->getRPM(127), Min_RPM, Max_RPM, 0, 255);
+    load_PEDAL = map(pedal->getAverage(), Min_ValPedal, Max_ValPedal, 0, 255);
+    analogWrite(PIN_DRIVER_SPEED_CH1, load_RPM - load_PEDAL);
+    analogWrite(PIN_DRIVER_SPEED_CH2, load_RPM - load_PEDAL);
   }
-
-#endif
+ 
+  #ifdef monitor
+    if (time_to_print - millis() > 40)
+    {
+      Serial.print("Value of RPM:");
+      Serial.print(rpm->getRPM(1));
+      Serial.print(rpm->getAverage());
+      Serial.print("\nValue of pedal(in %):");
+      Serial.print(pedal->getAverage() / 1023.f);
+      time_to_print = millis();
+    }
+  #endif
 }
