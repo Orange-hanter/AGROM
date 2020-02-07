@@ -1,96 +1,24 @@
+#include <Arduino.h>
+#include "RingBuffer.hpp"
 
-#define COUNT_OF_BLADES 7
-
-
-#define PIN_PEDAL 11         //TODO Обязательно поменять номер пинов!
+#define PIN_PEDAL A1
 #define PIN_TACHOMETER 2
 
+#define PIN_DRIVER_SPEED_CH1 5
+#define PIN_DRIVER_DIR_1 4
+#define PIN_DRIVER_SPEED_2 6
+#define PIN_DRIVER_DIR_2 7
 
-class RotatePerMinutes
-{
-private:
-  volatile long data[5];
-  short pos;
+#define Min_RPM 700
+#define Max_RPM 1300
 
-public:
-  RotatePerMinutes();
-  ~RotatePerMinutes();
+#define Min_ValPedal 0
+#define Max_ValPedal 5
 
-  void update(long value);
-  void update(/*time*/);
-  long getAverage();
-  float getRPM();
-  void check(long timeNow);
-};
+#define monitor
 
-RotatePerMinutes::RotatePerMinutes()
-{
-  pos = 0;
-  for (size_t i = 0; i < 5; i++)
-    data[i] = 0;
-}
-
-RotatePerMinutes::~RotatePerMinutes() {}
-
-void RotatePerMinutes::update()
-{
-  data[(pos + 1) % 5] = micros() - data[pos];
-  pos = pos++ % 5;
-}
-
-long RotatePerMinutes::getAverage()
-{
-  return (data[0] + data[1] + data[2] + data[3] + data[4]) / 5;
-}
-
-float RotatePerMinutes::getRPM()
-{
-  return 60.f * (1000000.f / (this->getAverage() * COUNT_OF_BLADES)); //TODO aproof math of calculation RPM
-}
-
-void RotatePerMinutes::check(long timeNow)
-{
-  bool tooLong = (timeNow - data[(pos-1)%5]) > 10000; //TODO confirm that this value (time between signals) not to 
-  if(tooLong)
-    for (size_t i = 0; i < 5; i++)
-      data[i] = 0;
-}
-
-class mySmoothing
-{
-private:
-  volatile float data[5];
-  short pos;
-
-public:
-  mySmoothing();
-  ~mySmoothing();
-
-  void update(float value);
-  float getAverage();
-};
-
-mySmoothing::mySmoothing()
-{
-  pos = 0;
-  for (size_t i = 0; i < 5; i++)
-    data[i] = 0;
-}
-
-void mySmoothing::update(float value)
-{
-  data[(pos + 1) % 5] = value - data[pos];
-  pos = pos++ % 5;
-}
-
-float mySmoothing::getAverage()
-{
-  return (data[0] + data[1] + data[2] + data[3] + data[4]) / 5.f;
-}
-
-RotatePerMinutes *rpm;
-mySmoothing *pedal;
-
+RPMMetr *rpm;
+RingBuffer<float> *pedal;
 
 void tachometer_Interrupt()
 {
@@ -99,25 +27,46 @@ void tachometer_Interrupt()
 
 void setup()
 {
-  rpm = new RotatePerMinutes;
-  pedal = new mySmoothing;
-  attachInterrupt(digitalPinToInterrupt(PIN_TACHOMETER), tachometer_Interrupt, FALLING);
-  Serial.begin(115200);
+  rpm = new RPMMetr;
+  pedal = new RingBuffer<float>;
 
+  attachInterrupt(digitalPinToInterrupt(PIN_TACHOMETER), tachometer_Interrupt, FALLING);
+
+#ifdef monitor
+  Serial.begin(115200);
+#endif
 }
+volatile long time_front = 0;
+volatile long time_to_print = 0;
+volatile long time_to_update_A1 = 0;
 
 void loop()
 {
-  pedal->update(analogRead(PIN_PEDAL));
-  if (millis()%1000)
+  //обновляем значение на педали каждые 50мс
+  if (millis() - time_to_update_A1 > 50)
+  {
+    pedal->update(analogRead(PIN_PEDAL));
+    time_to_update_A1 = millis();
+  }
+
+  //проверяем не простаивает ли тахометр больше секунды
+  if (millis() % 1000)
     rpm->check(micros());
   
-
- /* 
-  Serial.print("Value of RPM:");
-  Serial.print(rpm->getRPM());
-  Serial.print("\nValue of pedal(in %):");
-  Serial.print(pedal->getAverage() / 1023.f);
+  /*
+    READY TO WRITE BUISNESS LOGIC
   */
-  delay(10);
+
+#ifdef monitor
+  if (time_to_print - millis() > 40)
+  {
+    Serial.print("Value of RPM:");
+    Serial.print(rpm->getRPM(1));
+    Serial.print(rpm->getAverage());
+    Serial.print("\nValue of pedal(in %):");
+    Serial.print(pedal->getAverage() / 1023.f);
+    time_to_print = millis();
+  }
+
+#endif
 }
