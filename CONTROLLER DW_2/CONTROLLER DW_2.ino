@@ -51,10 +51,10 @@ void loop() {
     case _STATE::CALC_MODE:
       {
         Serial.println("CALC MODE");
-        P_MODE = MODE;
+        //P_MODE = MODE;
         MODE = calculateMode(getInputMask());
         printMode(MODE);
-        STATE = _STATE::SWITCH_MODE;
+        STATE = _STATE::CHECK_MODE;
         break;
       }
 
