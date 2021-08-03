@@ -61,5 +61,6 @@ enum _STATE{
   INIT,
   MONITORING,
   CALC_MODE,
+  CHECK_MODE,
   SWITCH_MODE
 } static STATE;

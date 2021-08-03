@@ -57,7 +57,19 @@ void loop() {
         STATE = _STATE::CHECK_MODE;
         break;
       }
-
+    case _STATE::CHECK_MODE:
+    {
+      Serial.println("CHECK MODE");
+      if(true)
+      {
+        STATE = _STATE::SWITCH_MODE;
+      }
+      else
+      {
+         STATE = _STATE::MONITORING;
+      }
+      break;
+    }
     case _STATE::SWITCH_MODE:
       {
         Serial.println("SWITCH MODE");
