@@ -64,7 +64,6 @@ void loop() {
     case _STATE::CHECK_MODE:
     {
       Serial.println("CHECK MODE");
-      P_MODE = MODE;
       if(true)
       {
         STATE = _STATE::SWITCH_MODE;
@@ -73,6 +72,7 @@ void loop() {
       {
          STATE = _STATE::MONITORING;
       }
+      P_MODE = MODE;
       break;
     }
     case _STATE::SWITCH_MODE:
@@ -91,9 +91,10 @@ void loop() {
 
           case N1: setRelayPattern(0, 1, 0, 1, 0); break;
           case N2: setRelayPattern(0, 0, 0, 1, 0); break;
-          case N3: setRelayPattern(0, 0, 0, 0, 0); break;
-          case N4: setRelayPattern(0, 0, 0, 0, 0); break;
-          default: Serial.println("ERROR: MODE NOT DEFINED!");
+          case N3: case N4: setRelayPattern(0, 0, 0, 0, 0); break;
+          default: 
+            setRelayPattern(0, 0, 0, 0, 0);
+            Serial.println("ERROR: MODE NOT DEFINED!");
         };
 
         STATE = _STATE::MONITORING;
