@@ -12,6 +12,7 @@ int getInputValue(int i);
 void printMode(_MODE mode);
 void setRelayPattern(int M1, int M2, int M3, int M4, int M5);
 void cmdReprocess();
+uint32_t OMASK(uint32_t i = 0);
 
 void setup() {
   Serial.begin(115200);
@@ -79,21 +80,21 @@ void loop() {
       {
         Serial.println("SWITCH MODE");
         switch (MODE) {
-          case F1: setRelayPattern(0, 1, 1, 1, 0); break;
-          case F2: setRelayPattern(0, 0, 1, 1, 0); break;
-          case F3: setRelayPattern(0, 0, 1, 0, 0); break;
-          case F4: setRelayPattern(0, 0, 0, 0, 1); break;
+          case F1: setRelayPattern(0, 1, 1, 1, 0); OMASK(0b01110); break;
+          case F2: setRelayPattern(0, 0, 1, 1, 0); OMASK(0b00110); break;
+          case F3: setRelayPattern(0, 0, 1, 0, 0); OMASK(0b00100); break;
+          case F4: setRelayPattern(0, 0, 0, 0, 1); OMASK(0b00001); break;
 
-          case R1: setRelayPattern(1, 1, 0, 1, 0); break;
-          case R2: setRelayPattern(1, 0, 0, 1, 0); break;
-          case R3: setRelayPattern(1, 0, 0, 0, 0); break;
-          case R4: setRelayPattern(1, 0, 0, 0, 0); break;
+          case R1: setRelayPattern(1, 1, 0, 1, 0); OMASK(0b11010); break;
+          case R2: setRelayPattern(1, 0, 0, 1, 0); OMASK(0b10010); break;
+          case R3: 
+          case R4: setRelayPattern(1, 0, 0, 0, 0); OMASK(0b10000); break;
 
-          case N1: setRelayPattern(0, 1, 0, 1, 0); break;
-          case N2: setRelayPattern(0, 0, 0, 1, 0); break;
+          case N1: setRelayPattern(0, 1, 0, 1, 0); OMASK(0b01010); break;
+          case N2: setRelayPattern(0, 0, 0, 1, 0); OMASK(0b00010); break;
           case N3: case N4: setRelayPattern(0, 0, 0, 0, 0); break;
           default: 
-            setRelayPattern(0, 0, 0, 0, 0);
+            setRelayPattern(0, 0, 0, 0, 0); OMASK(0b00000);
             Serial.println("ERROR: MODE NOT DEFINED!");
         };
 
@@ -198,10 +199,24 @@ void cmdReprocess(){
         Serial.print("Currently selected:");
         printMode(MODE);
      }
-     if(inByte == 51) // show current MASC
+     if(inByte == 51) // show current IMASC
      {
         Serial.print("Input mask:");
         Serial.println(getInputMask(), BIN);
      }
+     if(inByte == 52) // show current OMASC
+     {
+        Serial.print("Input mask:");
+        Serial.println(OMASK(), BIN);
+     }
    }
+}
+
+
+uint32_t OMASK(uint32_t i = 0)
+{
+    static uint32_t mask = 0;
+    if(i != 0)
+        mask = i;
+    return mask;
 }
