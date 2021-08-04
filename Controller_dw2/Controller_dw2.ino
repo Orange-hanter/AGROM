@@ -1,5 +1,10 @@
 #include "Consts.hpp"
 
+/*
+для обновления прошивки выполни в консоли 2 команды
+	cd wental/Documents/Arduino/AGROM/Controller_dw2/
+	git pull
+*/
 
 int getInputMask();
 void printInputStatus();
