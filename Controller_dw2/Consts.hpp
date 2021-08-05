@@ -13,11 +13,11 @@ pin_t p_TMP = 2;
 pin_t inputs[] = {p_B1, p_B2, p_B3, p_V, p_R, p_AS, p_KD, p_TMP};
 const auto inputs_count = sizeof(inputs)/sizeof(pin_t);
 
-pin_t p_M1 = 14;  // A0
-pin_t p_M2 = 15;  // A1
-pin_t p_M3 = 16;  // A2
-pin_t p_M4 = 17;  // A3
-pin_t p_M5 = 18;  // A4
+pin_t p_M1 = 14;  // A0 //M1
+pin_t p_M2 = 15;  // A1 //M2
+pin_t p_M3 = 16;  // A2 //M3
+pin_t p_M4 = 17;  // A3 //M4
+pin_t p_M5 = 18;  // A4 //M5
 
 pin_t outputs[] = {p_M1, p_M2, p_M3, p_M4, p_M5};
 const auto outputs_count = sizeof(outputs)/sizeof(pin_t);

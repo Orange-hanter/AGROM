@@ -44,11 +44,11 @@ void loop() {
       {
         cmdReprocess();
         MODE = calculateMode(getInputMask());
-        if(MODE == _MODE::NA)
-          break;
+        //if(MODE == _MODE::NA)
+        //  break;
         if (P_MODE != MODE) {
           Serial.println("STARTED MONITORING UPDATE");
-          delay(400);
+          delay(200);
           STATE = _STATE::CALC_MODE;
         }
         break;
@@ -90,9 +90,12 @@ void loop() {
           case R3: 
           case R4: setRelayPattern(1, 0, 0, 0, 0); OMASK(0b10000); break;
 
-          case N1: setRelayPattern(0, 1, 0, 1, 0); OMASK(0b01010); break;
-          case N2: setRelayPattern(0, 0, 0, 1, 0); OMASK(0b00010); break;
-          case N3: case N4: setRelayPattern(0, 0, 0, 0, 0); break;
+          case N1: 
+          case N2: 
+          case N3:
+          case N4: setRelayPattern(0, 1, 0, 1, 0); OMASK(0b01010); break;
+          //case N2: setRelayPattern(0, 0, 0, 1, 0); OMASK(0b00010); break;
+          //case N3: case N4: setRelayPattern(0, 0, 0, 0, 0); break;
           default: 
             setRelayPattern(0, 0, 0, 0, 0); OMASK(0b00000);
             Serial.println("ERROR: MODE NOT DEFINED!");
@@ -206,14 +209,14 @@ void cmdReprocess(){
      }
      if(inByte == 52) // show current OMASC
      {
-        Serial.print("Input mask:");
+        Serial.print("Onput mask:");
         Serial.println(OMASK(), BIN);
      }
    }
 }
 
 
-uint32_t OMASK(uint32_t i = 0)
+uint32_t OMASK(uint32_t i)
 {
     static uint32_t mask = 0;
     if(i != 0)
